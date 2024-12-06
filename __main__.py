@@ -3,6 +3,8 @@ from torch import nn
 from torch.utils.data import DataLoader
 from torchvision import datasets
 from torchvision.transforms import ToTensor
+# import model definition
+from model import NeuralNetwork
 
 
 training_data = datasets.FashionMNIST(
@@ -39,24 +41,6 @@ device = (
     else "cpu"
 )
 print(f"Using {device} device")
-
-# Define model
-class NeuralNetwork(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.flatten = nn.Flatten()
-        self.linear_relu_stack = nn.Sequential(
-            nn.Linear(28*28, 512),
-            nn.ReLU(),
-            nn.Linear(512, 512),
-            nn.ReLU(),
-            nn.Linear(512, 10)
-        )
-
-    def forward(self, x):
-        x = self.flatten(x)
-        logits = self.linear_relu_stack(x)
-        return logits
 
 model = NeuralNetwork().to(device)
 
@@ -98,9 +82,19 @@ def test(dataloader, model, loss_fn):
     correct /= size
     print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
 
+load_model_flag = True
+
+if load_model_flag:
+    model = torch.load('saved_model.pt')
+else:
+    model = NeuralNetwork().to(device)
+
 epochs = 5
 for t in range(epochs):
     print(f"Epoch {t+1}\n-------------------------------")
     train(train_dataloader, model, loss_fn, optimizer)
     test(test_dataloader, model, loss_fn)
+
+torch.save(model.state_dict(), 'saved_model.pt')
+
 print("Done!")
